@@ -1,30 +1,66 @@
-<script setup>
-import HelloWorld from './components/HelloWorld.vue'
-</script>
-
 <template>
-  <div>
-    <a href="https://vite.dev" target="_blank">
-      <img src="/vite.svg" class="logo" alt="Vite logo" />
-    </a>
-    <a href="https://vuejs.org/" target="_blank">
-      <img src="./assets/vue.svg" class="logo vue" alt="Vue logo" />
-    </a>
+  <div id="app" class="app-container">
+    <header>
+      <nav>
+        <router-link to="/" class="nav-link" exact-active-class="active">Home</router-link>
+        <router-link to="/docs" class="nav-link" exact-active-class="active">Docs</router-link>
+      </nav>
+    </header>
+
+    <main>
+      <router-view />
+    </main>
+
+    <footer>
+      <small>© 2025 DevDocBuddy</small>
+    </footer>
   </div>
-  <HelloWorld msg="Vite + Vue" />
 </template>
 
+<script setup>
+// No extra script logic here as router & pinia are initialized in main.js
+</script>
+
 <style scoped>
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
+.app-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 }
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
+
+header {
+  margin-bottom: 1.5rem;
 }
-.logo.vue:hover {
-  filter: drop-shadow(0 0 2em #42b883aa);
+
+nav {
+  display: flex;
+  gap: 1.5rem;
+  font-weight: bold;
+}
+
+.nav-link {
+  text-decoration: none;
+  color: #555;
+}
+
+.nav-link.active {
+  color: #42b983; /* Vue green */
+  border-bottom: 2px solid #42b983;
+  padding-bottom: 2px;
+}
+
+main {
+  flex-grow: 1;
+}
+
+footer {
+  text-align: center;
+  margin-top: 3rem;
+  color: #888;
+  font-size: 0.9rem;
 }
 </style>
