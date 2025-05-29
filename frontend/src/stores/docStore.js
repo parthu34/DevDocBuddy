@@ -14,7 +14,7 @@ export const useDocStore = defineStore('docStore', {
       this.error = null
       try {
         const response = await axios.post('/api/summarize', { query: this.query })
-        this.results = response.data
+        this.results = response.data.summary
       } catch (e) {
         this.error = e.message || 'Failed to fetch summary'
       } finally {
