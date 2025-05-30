@@ -20,6 +20,37 @@ export const useDocStore = defineStore('docStore', {
       } finally {
         this.loading = false
       }
+    },
+
+    async uploadFile(file) {
+      this.loading = true
+      this.error = null
+      try {
+        const formData = new FormData()
+        formData.append('file', file)
+
+        const response = await axios.post('/api/upload', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        })
+        this.results = response.data.summary
+      } catch (e) {
+        this.error = e.message || 'File upload failed'
+      } finally {
+        this.loading = false
+      }
+    },
+
+    async uploadFromURL(url) {
+      this.loading = true
+      this.error = null
+      try {
+        const response = await axios.post('/api/upload-url', { url })
+        this.results = response.data.summary
+      } catch (e) {
+        this.error = e.message || 'URL upload failed'
+      } finally {
+        this.loading = false
+      }
     }
   }
 })
