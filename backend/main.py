@@ -1,23 +1,42 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, UploadFile, File, Form, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from typing import Optional
 
 app = FastAPI()
 
-# Enable CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Restrict in prod
+    allow_origins=["*"],  # Restrict in production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 class SummarizeRequest(BaseModel):
-    query: str
+    query: Optional[str] = None
 
 @app.post("/api/summarize")
 async def summarize(req: SummarizeRequest):
+    content = req.query if req.query else ""
+    # TODO: Replace mock with real summary logic
     return {
-        "summary": f"<h2>Mocked Summary</h2><p>This is a mock for query: <strong>{req.query}</strong></p>"
+        "summary": f"<h2>Summary</h2><p>This is a mock summary for input:</p><pre>{content[:500]}</pre>"
+    }
+
+@app.post("/api/upload")
+async def upload_file(file: UploadFile = File(...)):
+    contents = await file.read()
+    # TODO: Add real file parsing here (PDF, Markdown, etc.)
+    content = contents.decode("utf-8", errors="ignore")
+    return {
+        "summary": f"<h2>File Summary</h2><p>Mocked summary for uploaded file content:</p><pre>{content[:500]}</pre>"
+    }
+
+@app.post("/api/upload-url")
+async def upload_url(url: str = Form(...)):
+    # TODO: Fetch GitHub doc from URL and parse it
+    content = f"Mocked content fetched from GitHub URL: {url}"
+    return {
+        "summary": f"<h2>GitHub URL Summary</h2><p>{content}</p>"
     }
