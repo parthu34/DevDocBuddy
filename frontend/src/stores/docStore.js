@@ -41,16 +41,21 @@ export const useDocStore = defineStore('docStore', {
     },
 
     async uploadFromURL(url) {
-      this.loading = true
-      this.error = null
-      try {
-        const response = await axios.post('/api/upload-url', { url })
+    this.loading = true
+    this.error = null
+    try {
+        const formData = new FormData()
+        formData.append('url', url)
+
+        const response = await axios.post('/api/upload-url', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        })
         this.results = response.data.summary
-      } catch (e) {
+    } catch (e) {
         this.error = e.message || 'URL upload failed'
-      } finally {
+    } finally {
         this.loading = false
-      }
+    }
     }
   }
 })
