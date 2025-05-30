@@ -1,14 +1,15 @@
 from fastapi import FastAPI, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
 from typing import Optional
+import os
+
+from doc_parser import parse_pdf, parse_markdown, fetch_github_readme
 
 app = FastAPI()
 
-# CORS setup (keep as-is)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Update in prod
+    allow_origins=["*"],  # Update for production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -20,17 +21,31 @@ async def summarize(
     github_url: Optional[str] = Form(None),
     file: Optional[UploadFile] = File(None)
 ):
-    # Mocked logic — will add real parser later
     content = ""
 
     if query:
         content = query
     elif github_url:
-        content = f"Mocked content fetched from GitHub URL: {github_url}"
+        content = fetch_github_readme(github_url)
     elif file:
-        contents = await file.read()
-        content = contents.decode("utf-8", errors="ignore")
+        ext = os.path.splitext(file.filename)[-1].lower()
+        os.makedirs("temp", exist_ok=True)
+        temp_path = os.path.join("temp", file.filename)
+
+        with open(temp_path, "wb") as f:
+            f.write(await file.read())
+
+        if ext == ".pdf":
+            content = parse_pdf(temp_path)
+        elif ext == ".md":
+            content = parse_markdown(temp_path)
+        else:
+            content = f"Unsupported file type: {ext}"
+
+        os.remove(temp_path)
+    else:
+        content = "⚠️ No input provided"
 
     return {
-        "summary": f"<h2>Summary</h2><p>This is a mock summary for input:</p><pre>{content[:500]}</pre>"
+        "summary": f"<h2>Parsed Summary</h2><pre>{content[:1000]}</pre>"
     }
