@@ -11,6 +11,7 @@ AI Assistant to Summarize & Interpret Developer Documentation
 backend
 `python -m venv venv`
 `source venv/Scripts/activate`
+`cd backend`
 `pip install -r requirements.txt`
 `python -m uvicorn main:app --reload --port 8000`
 
