@@ -82,7 +82,11 @@ def ask_question(question: str = Form(...)):
 
     prompt = f"Given the following documentation excerpts:\n{context}\n\nAnswer the question: {question}"
     answer = generate_summary(prompt)
-    return {"answer": answer}
+
+    return {
+        "answer": answer,
+        "sources": relevant_chunks  # NEW: Send chunks back to frontend
+    }
 
 # Utility to extract text from PDF bytes
 def extract_text_from_pdf(pdf_bytes: bytes) -> str:
