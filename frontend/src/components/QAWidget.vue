@@ -3,9 +3,21 @@
     <h3>Ask AI about your docs</h3>
 
     <div class="chat-window" ref="chatWindow">
-      <div v-for="(msg, index) in messages" :key="index" :class="['message', msg.from]">
+      <div
+        v-for="(msg, index) in messages"
+        :key="index"
+        :class="['message', msg.from]"
+      >
         <strong>{{ msg.from === 'user' ? 'You' : 'AI' }}:</strong>
         <p>{{ msg.text }}</p>
+
+        <!-- Show sources if present -->
+        <div v-if="msg.sources && msg.sources.length" class="sources">
+          <h4>Sources:</h4>
+          <ul>
+            <li v-for="(src, i) in msg.sources" :key="i">{{ src }}</li>
+          </ul>
+        </div>
       </div>
     </div>
 
@@ -23,7 +35,7 @@ import { ref, nextTick } from 'vue'
 import axios from 'axios'
 
 const question = ref('')
-const messages = ref([]) // {from: 'user'|'ai', text: string}
+const messages = ref([]) // {from: 'user'|'ai', text: string, sources?: string[]}
 const loading = ref(false)
 const error = ref(null)
 const chatWindow = ref(null)
@@ -42,8 +54,13 @@ async function sendQuestion() {
 
     const res = await axios.post('http://localhost:8000/api/ask', formData)
     const answer = res.data.answer || 'No answer received.'
+    const sources = res.data.sources || []
 
-    messages.value.push({ from: 'ai', text: answer })
+    messages.value.push({
+      from: 'ai',
+      text: answer,
+      sources: sources
+    })
   } catch (err) {
     error.value = 'Failed to get answer. Please try again.'
   } finally {
@@ -86,6 +103,20 @@ async function sendQuestion() {
   text-align: left;
   color: #333;
 }
+.sources {
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  background: #eef;
+  padding: 0.5rem;
+  border-radius: 6px;
+}
+.sources h4 {
+  margin: 0 0 0.25rem 0;
+}
+.sources ul {
+  padding-left: 1.2rem;
+  margin: 0;
+}
 .error {
   color: red;
   margin-top: 0.5rem;
@@ -106,4 +137,3 @@ button:disabled {
   cursor: not-allowed;
 }
 </style>
-npm install axios
