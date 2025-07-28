@@ -18,7 +18,7 @@
 </template>
 
 <script setup>
-// No extra script logic here as router & pinia are initialized in main.js
+// No changes needed here
 </script>
 
 <style scoped>
@@ -30,10 +30,13 @@
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  background-color: #f9f9f9; /* Soft background */
 }
 
 header {
   margin-bottom: 1.5rem;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 0.5rem;
 }
 
 nav {
@@ -44,13 +47,19 @@ nav {
 
 .nav-link {
   text-decoration: none;
-  color: #555;
+  color: #333;
+  padding-bottom: 2px;
+  transition: all 0.2s ease;
+}
+
+.nav-link:hover {
+  color: #42b983;
+  border-bottom: 2px solid #42b983;
 }
 
 .nav-link.active {
-  color: #42b983; /* Vue green */
+  color: #42b983;
   border-bottom: 2px solid #42b983;
-  padding-bottom: 2px;
 }
 
 main {
@@ -59,7 +68,8 @@ main {
 
 footer {
   text-align: center;
-  margin-top: 3rem;
+  margin-top: auto;
+  padding-top: 2rem;
   color: #888;
   font-size: 0.9rem;
 }
