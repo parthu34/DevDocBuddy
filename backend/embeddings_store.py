@@ -11,17 +11,30 @@ class EmbeddingsStore:
         self.dimension = self.model.get_sentence_embedding_dimension()
 
     def build_index(self, texts):
-        # Generate embeddings for all texts
+        # Completely rebuild the index with new texts
         embeddings = self.model.encode(texts, convert_to_numpy=True)
-        # Create a FAISS index
         self.index = faiss.IndexFlatL2(self.dimension)
         self.index.add(embeddings)
         self.texts = texts
 
+    def add_texts(self, new_texts):
+        # Add new texts incrementally to existing index
+        embeddings = self.model.encode(new_texts, convert_to_numpy=True)
+        if self.index is None:
+            self.index = faiss.IndexFlatL2(self.dimension)
+            self.texts = []
+        self.index.add(embeddings)
+        self.texts.extend(new_texts)
+
+    def reset(self):
+        # Clear index and texts
+        self.index = None
+        self.texts = []
+
     def search(self, query, top_k=5):
-        # Embed the query
+        if self.index is None:
+            return []
         query_vec = self.model.encode([query], convert_to_numpy=True)
-        # Search index for top_k closest vectors
         distances, indices = self.index.search(query_vec, top_k)
         results = []
         for idx in indices[0]:

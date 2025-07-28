@@ -4,6 +4,7 @@ import requests
 
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse  # <--- Added
 from pydantic import BaseModel
 from typing import Optional
 
@@ -39,7 +40,7 @@ def summarize(req: SummarizeRequest):
     summary = generate_summary(content)
     return {"summary": f"<h2>Parsed Content Summary</h2><p>{summary}</p>"}
 
-# File upload summarization and embeddings build
+# File upload summarization and embeddings build (replaces existing index)
 @app.post("/api/upload")
 async def upload_file(file: UploadFile = File(...)):
     contents = await file.read()
@@ -48,14 +49,14 @@ async def upload_file(file: UploadFile = File(...)):
     else:
         text = contents.decode("utf-8", errors="ignore")
 
-    # Build embeddings store with chunks for Q&A
+    # Build embeddings store with chunks for Q&A (rebuild index)
     chunks = split_text_into_chunks(text, chunk_size=500)
     embed_store.build_index(chunks)
 
     summary = generate_summary(text)
     return {"summary": f"<h2>Parsed Content Summary</h2><p>{summary}</p>"}
 
-# GitHub doc URL summarization and embeddings build
+# GitHub doc URL summarization and embeddings build (replaces existing index)
 @app.post("/api/upload-url")
 async def upload_url(url: str = Form(...)):
     try:
@@ -71,6 +72,27 @@ async def upload_url(url: str = Form(...)):
     summary = generate_summary(content)
     return {"summary": f"<h2>GitHub URL Summary</h2><p>{summary}</p>"}
 
+# New endpoint: Add new document chunks incrementally to existing embeddings
+@app.post("/api/add-doc")
+async def add_document(file: UploadFile = File(...)):
+    contents = await file.read()
+    if file.filename.endswith(".pdf"):
+        text = extract_text_from_pdf(contents)
+    else:
+        text = contents.decode("utf-8", errors="ignore")
+
+    chunks = split_text_into_chunks(text, chunk_size=500)
+    embed_store.add_texts(chunks)
+
+    summary = generate_summary(text)
+    return {"summary": f"<h2>Added Content Summary</h2><p>{summary}</p>"}
+
+# New endpoint: Reset embeddings store (clear all)
+@app.post("/api/reset")
+def reset_embeddings():
+    embed_store.reset()
+    return JSONResponse(content={"message": "Embeddings store reset successfully."})
+
 # Ask question endpoint using embeddings + summarization
 @app.post("/api/ask")
 def ask_question(question: str = Form(...)):
@@ -85,7 +107,7 @@ def ask_question(question: str = Form(...)):
 
     return {
         "answer": answer,
-        "sources": relevant_chunks  # NEW: Send chunks back to frontend
+        "sources": relevant_chunks  # Send chunks back to frontend
     }
 
 # Utility to extract text from PDF bytes
