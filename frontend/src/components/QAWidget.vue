@@ -11,10 +11,15 @@
         <strong>{{ msg.from === 'user' ? 'You' : 'AI' }}:</strong>
         <p>{{ msg.text }}</p>
 
-        <!-- Show sources if present -->
+        <!-- Collapsible sources -->
         <div v-if="msg.sources && msg.sources.length" class="sources">
-          <h4>Sources:</h4>
-          <ul>
+          <button 
+            @click="toggleSources(index)"
+            class="toggle-sources-btn"
+          >
+            {{ msg.showSources ? 'Hide Sources' : 'Show Sources' }}
+          </button>
+          <ul v-show="msg.showSources">
             <li v-for="(src, i) in msg.sources" :key="i">{{ src }}</li>
           </ul>
         </div>
@@ -35,10 +40,14 @@ import { ref, nextTick } from 'vue'
 import axios from 'axios'
 
 const question = ref('')
-const messages = ref([]) // {from: 'user'|'ai', text: string, sources?: string[]}
+const messages = ref([]) // {from, text, sources?, showSources?}
 const loading = ref(false)
 const error = ref(null)
 const chatWindow = ref(null)
+
+function toggleSources(index) {
+  messages.value[index].showSources = !messages.value[index].showSources
+}
 
 async function sendQuestion() {
   if (!question.value.trim()) return
@@ -59,7 +68,8 @@ async function sendQuestion() {
     messages.value.push({
       from: 'ai',
       text: answer,
-      sources: sources
+      sources: sources,
+      showSources: false // default collapsed
     })
   } catch (err) {
     error.value = 'Failed to get answer. Please try again.'
@@ -110,8 +120,15 @@ async function sendQuestion() {
   padding: 0.5rem;
   border-radius: 6px;
 }
-.sources h4 {
-  margin: 0 0 0.25rem 0;
+.toggle-sources-btn {
+  background: none;
+  border: none;
+  color: #007bff;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+  margin-bottom: 0.3rem;
+  font-size: 0.9rem;
 }
 .sources ul {
   padding-left: 1.2rem;
