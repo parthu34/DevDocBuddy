@@ -1,22 +1,24 @@
 <template>
-  <div class="qa-widget">
-    <h3>Ask AI about your docs</h3>
+  <section class="qa-widget">
+    <h2>Ask Questions</h2>
 
     <div class="chat-window" ref="chatWindow">
+      <div v-if="messages.length === 0" class="empty-state">
+        <p>Start by asking a question about your uploaded documentation.</p>
+      </div>
+
       <div
         v-for="(msg, index) in messages"
         :key="index"
         :class="['message', msg.from]"
       >
-        <strong>{{ msg.from === 'user' ? 'You' : 'AI' }}:</strong>
-        <p>{{ msg.text }}</p>
+        <strong v-if="msg.from === 'user'">You:</strong>
+        <strong v-else>AI:</strong>
+        <span>{{ msg.text }}</span>
 
-        <!-- Collapsible sources -->
+        <!-- Sources collapsible section -->
         <div v-if="msg.sources && msg.sources.length" class="sources">
-          <button 
-            @click="toggleSources(index)"
-            class="toggle-sources-btn"
-          >
+          <button @click="toggleSources(index)" class="toggle-sources-btn">
             {{ msg.showSources ? 'Hide Sources' : 'Show Sources' }}
           </button>
           <ul v-show="msg.showSources">
@@ -24,44 +26,45 @@
           </ul>
         </div>
       </div>
+
+      <div v-if="loading" class="message ai loading">
+        <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+      </div>
     </div>
 
-    <form @submit.prevent="sendQuestion">
-      <input v-model="question" placeholder="Type your question here..." />
-      <button :disabled="loading || !question.trim()">Ask</button>
+    <form @submit.prevent="askQuestion" class="qa-form">
+      <input v-model="question" type="text" placeholder="Ask a question..." />
+      <button :disabled="loading || !question.trim()" type="submit">Ask</button>
     </form>
-
-    <p v-if="error" class="error">{{ error }}</p>
-  </div>
+  </section>
 </template>
 
 <script setup>
-import { ref, nextTick } from 'vue'
+import { ref, watch, nextTick } from 'vue'
 import axios from 'axios'
 
 const question = ref('')
-const messages = ref([]) // {from, text, sources?, showSources?}
+const messages = ref([]) // messages now can have sources and showSources props
 const loading = ref(false)
-const error = ref(null)
 const chatWindow = ref(null)
 
 function toggleSources(index) {
   messages.value[index].showSources = !messages.value[index].showSources
 }
 
-async function sendQuestion() {
+async function askQuestion() {
   if (!question.value.trim()) return
-  error.value = null
-  loading.value = true
 
-  // Add user message
   messages.value.push({ from: 'user', text: question.value })
+  const asked = question.value
+  question.value = ''
+  loading.value = true
 
   try {
     const formData = new FormData()
-    formData.append('question', question.value)
+    formData.append('question', asked)
 
-    const res = await axios.post('http://localhost:8000/api/ask', formData)
+    const res = await axios.post('/api/ask', formData)
     const answer = res.data.answer || 'No answer received.'
     const sources = res.data.sources || []
 
@@ -69,50 +72,53 @@ async function sendQuestion() {
       from: 'ai',
       text: answer,
       sources: sources,
-      showSources: false // default collapsed
+      showSources: false, // collapsed by default
     })
   } catch (err) {
-    error.value = 'Failed to get answer. Please try again.'
+    messages.value.push({ from: 'ai', text: 'Error: Failed to fetch answer.' })
   } finally {
     loading.value = false
-    question.value = ''
-
-    // Scroll chat window to bottom
-    await nextTick()
-    if (chatWindow.value) {
-      chatWindow.value.scrollTop = chatWindow.value.scrollHeight
-    }
   }
 }
+
+watch(messages, async () => {
+  await nextTick()
+  if (chatWindow.value) {
+    chatWindow.value.scrollTop = chatWindow.value.scrollHeight
+  }
+})
 </script>
 
 <style scoped>
 .qa-widget {
-  max-width: 600px;
-  margin: 1rem auto;
-  border: 1px solid #ccc;
-  border-radius: 8px;
+  margin-top: 2rem;
   padding: 1rem;
-}
-.chat-window {
-  height: 300px;
-  overflow-y: auto;
   border: 1px solid #ddd;
-  padding: 0.5rem;
+  border-radius: 8px;
+}
+
+.chat-window {
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid #ccc;
+  padding: 0.75rem;
   margin-bottom: 1rem;
+  border-radius: 4px;
   background: #f9f9f9;
 }
+
 .message {
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
 }
+
 .message.user {
-  text-align: right;
-  color: #007bff;
-}
-.message.ai {
-  text-align: left;
   color: #333;
 }
+
+.message.ai {
+  color: #2c7;
+}
+
 .sources {
   margin-top: 0.5rem;
   font-size: 0.9rem;
@@ -120,6 +126,7 @@ async function sendQuestion() {
   padding: 0.5rem;
   border-radius: 6px;
 }
+
 .toggle-sources-btn {
   background: none;
   border: none;
@@ -130,27 +137,61 @@ async function sendQuestion() {
   margin-bottom: 0.3rem;
   font-size: 0.9rem;
 }
+
 .sources ul {
   padding-left: 1.2rem;
   margin: 0;
 }
-.error {
-  color: red;
-  margin-top: 0.5rem;
-}
-form {
+
+.qa-form {
   display: flex;
   gap: 0.5rem;
 }
-input {
+
+.qa-form input {
   flex-grow: 1;
   padding: 0.5rem;
 }
-button {
+
+.qa-form button {
   padding: 0.5rem 1rem;
 }
-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+
+.message.ai.loading {
+  display: flex;
+  gap: 0.3rem;
+  align-items: center;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  background: #42b983;
+  border-radius: 50%;
+  animation: blink 1s infinite alternate;
+}
+
+.dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes blink {
+  0% {
+    opacity: 0.3;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.empty-state {
+  text-align: center;
+  color: #888;
+  font-style: italic;
+  margin-top: 2rem;
 }
 </style>
