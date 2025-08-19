@@ -1,8 +1,10 @@
+# render.yaml (at repo root)
 services:
   - type: web
     name: devdocbuddy-api
     env: python
     plan: free
+    rootDir: backend           # <— tells Render to run from ./backend
     autoDeploy: true
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
