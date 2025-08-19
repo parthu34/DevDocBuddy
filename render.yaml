@@ -7,9 +7,9 @@ services:
     autoDeploy: true
     buildCommand: |
       python -m pip install --upgrade pip setuptools wheel
-      # Force wheels for these – avoids maturin/cargo
-      pip install --only-binary=:all: tokenizers==0.19.1
-      # (Optional) uncomment if faiss ever tries to build from source:
+      # Force wheels (avoids maturin/cargo on Render)
+      pip install --only-binary=:all: tokenizers==0.15.2
+      # If faiss ever builds from source, uncomment the next line:
       # pip install --only-binary=:all: faiss-cpu==1.8.0.post5
       pip install --no-cache-dir -r requirements.txt
     startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
@@ -24,9 +24,7 @@ services:
         value: "0.35"
       - key: MAX_CONTEXT_CHARS
         value: "6000"
-      # Prefer wheels globally; still harmless if wheels exist
       - key: PIP_PREFER_BINARY
         value: "1"
-      # Extra belt-and-suspenders: never build tokenizers from source
       - key: PIP_ONLY_BINARY
         value: "tokenizers"
