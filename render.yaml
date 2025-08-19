@@ -8,7 +8,7 @@ services:
     buildCommand: |
       python -m pip install --upgrade pip setuptools wheel
       # Force wheels for Rust-backed deps (no maturin/cargo)
-      pip install --only-binary=:all: tokenizers==0.15.2 safetensors==0.4.3
+      pip install --only-binary=:all: tokenizers==0.21.2 safetensors==0.4.3
       # If faiss ever tries to build from source, uncomment:
       # pip install --only-binary=:all: faiss-cpu==1.8.0.post5
       pip install --no-cache-dir -r requirements.txt
