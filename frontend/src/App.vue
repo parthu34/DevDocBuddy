@@ -18,49 +18,14 @@
 </template>
 
 <script setup>
-// No extra script logic here as router & pinia are initialized in main.js
 </script>
 
 <style scoped>
-.app-container {
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 2rem;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-}
-
-header {
-  margin-bottom: 1.5rem;
-}
-
-nav {
-  display: flex;
-  gap: 1.5rem;
-  font-weight: bold;
-}
-
-.nav-link {
-  text-decoration: none;
-  color: #555;
-}
-
-.nav-link.active {
-  color: #42b983; /* Vue green */
-  border-bottom: 2px solid #42b983;
-  padding-bottom: 2px;
-}
-
-main {
-  flex-grow: 1;
-}
-
-footer {
-  text-align: center;
-  margin-top: 3rem;
-  color: #888;
-  font-size: 0.9rem;
-}
+.app-container { max-width: 960px; margin: 0 auto; padding: 2rem; display: flex; flex-direction: column; min-height: 100vh; }
+header { margin-bottom: 1.5rem; }
+nav { display: flex; gap: 1.5rem; font-weight: bold; }
+.nav-link { text-decoration: none; color: #555; }
+.nav-link.active { color: #42b983; border-bottom: 2px solid #42b983; padding-bottom: 2px; }
+main { flex: 1; text-align: left; }
+footer { text-align: center; margin-top: 3rem; color: #888; font-size: .9rem; }
 </style>

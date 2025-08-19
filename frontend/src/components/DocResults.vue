@@ -8,7 +8,7 @@
 </template>
 
 <script setup>
-import { useDocStore } from '../stores/docStore'
+import { useDocStore } from '@/stores/docStore'
 const store = useDocStore()
 </script>
 
@@ -17,8 +17,7 @@ const store = useDocStore()
   border-top: 1px solid #ddd;
   padding-top: 1rem;
   margin-top: 1rem;
+  text-align: left;
 }
-.error {
-  color: red;
-}
+.error { color: red; }
 </style>
