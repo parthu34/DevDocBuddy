@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: devdocbuddy-api
+    env: python
+    plan: free
+    autoDeploy: true
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: HF_SUMMARIZER
+        value: sshleifer/distilbart-cnn-12-6
+      - key: EMBEDDING_MODEL
+        value: all-MiniLM-L6-v2
+      - key: QA_MODEL
+        value: deepset/roberta-base-squad2
+      - key: MIN_SIMILARITY
+        value: "0.35"
+      - key: MAX_CONTEXT_CHARS
+        value: "6000"

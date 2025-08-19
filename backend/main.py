@@ -50,7 +50,7 @@ app = FastAPI(title="DevDocBuddy")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],     # tighten for production
+    allow_origins=["https://devdocbuddy.vercel.app"],     # tighten for production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
