@@ -12,7 +12,7 @@ faiss-cpu==1.7.4
 sentence-transformers==2.2.2
 huggingface-hub==0.23.2
 langchain==0.0.325
-numpy==1.26.0
+numpy==1.26.4
 beautifulsoup4==4.12.2
 python-dotenv==1.0.0
 pydantic==2.7.2
