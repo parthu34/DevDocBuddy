@@ -16,5 +16,5 @@ numpy==1.26.4
 beautifulsoup4==4.12.2
 python-dotenv==1.0.0
 pydantic==2.7.2
-tokenizers==0.21.2
+tokenizers==0.20.3
 safetensors==0.4.3
