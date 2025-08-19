@@ -7,10 +7,11 @@ services:
     autoDeploy: true
     buildCommand: |
       python -m pip install --upgrade pip setuptools wheel
-      # Force wheels for Rust-backed deps (no maturin/cargo)
-      pip install --only-binary=:all: tokenizers==0.20.3 safetensors==0.4.3
-      # If faiss ever tries to build from source, uncomment:
-      # pip install --only-binary=:all: faiss-cpu==1.8.0.post5
+      # Install compatible hub FIRST (wheel)
+      pip install --only-binary=:all: huggingface-hub==0.16.4 safetensors==0.4.3
+      # Install tokenizers wheel WITHOUT pulling deps (so hub stays 0.16.4)
+      pip install --only-binary=:all: --no-deps tokenizers==0.20.3
+      # Now install the rest
       pip install --no-cache-dir -r requirements.txt
     startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
     envVars:
@@ -26,8 +27,3 @@ services:
         value: "0.35"
       - key: MAX_CONTEXT_CHARS
         value: "6000"
-      - key: PIP_PREFER_BINARY
-        value: "1"
-      # Belt-and-suspenders: ensure pip *never* builds tokenizers/safetensors/pydantic-core
-      - key: PIP_ONLY_BINARY
-        value: "pydantic-core,tokenizers,safetensors"
