@@ -3,32 +3,48 @@
     <h3>Ask AI about your docs</h3>
 
     <div class="chat-window" ref="chatWindow">
+      <div v-if="!messages.length" class="empty">
+        Start by asking about your uploaded docs. Examples:
+        <ul>
+          <li>Which are Python data types?</li>
+          <li>What is a variable?</li>
+          <li>Show the rules for variable names.</li>
+        </ul>
+      </div>
+
       <div
         v-for="(msg, index) in messages"
         :key="index"
         :class="['message', msg.from]"
       >
-        <strong>{{ msg.from === 'user' ? 'You' : 'AI' }}:</strong>
-        <p>{{ msg.text }}</p>
+        <div class="who">{{ msg.from === 'user' ? 'You' : 'AI' }}</div>
+        <pre class="bubble answer">{{ msg.text }}</pre>
 
-        <!-- Collapsible sources -->
-        <div v-if="msg.sources && msg.sources.length" class="sources">
-          <button 
-            @click="toggleSources(index)"
-            class="toggle-sources-btn"
-          >
+        <div v-if="msg.sources?.length" class="sources">
+          <button class="toggle" @click="toggleSources(index)">
             {{ msg.showSources ? 'Hide Sources' : 'Show Sources' }}
           </button>
           <ul v-show="msg.showSources">
-            <li v-for="(src, i) in msg.sources" :key="i">{{ src }}</li>
+            <li v-for="(s, i) in msg.sources" :key="i">
+              <span class="title">{{ sourceTitle(s) }}</span>
+              <span class="meta">
+                <template v-if="s.page">— p. {{ s.page }}</template>
+                <template v-if="isNumber(s.similarity)">, sim {{ s.similarity.toFixed(3) }}</template>
+              </span>
+            </li>
           </ul>
         </div>
       </div>
+
+      <div v-if="loading" class="loading">Thinking…</div>
     </div>
 
-    <form @submit.prevent="sendQuestion">
-      <input v-model="question" placeholder="Type your question here..." />
+    <form @submit.prevent="sendQuestion" class="ask">
+      <input v-model="question" placeholder="Type your question here…" />
       <button :disabled="loading || !question.trim()">Ask</button>
+      <button type="button" class="secondary" :disabled="loading || !messages.length" @click="clearChat">
+        Clear
+      </button>
     </form>
 
     <p v-if="error" class="error">{{ error }}</p>
@@ -37,16 +53,30 @@
 
 <script setup>
 import { ref, nextTick } from 'vue'
-import axios from 'axios'
+import { askQA } from '@/api'
 
 const question = ref('')
-const messages = ref([]) // {from, text, sources?, showSources?}
+const messages = ref([]) // {from, text, sources?:{title,page,similarity}[], showSources?}
 const loading = ref(false)
 const error = ref(null)
 const chatWindow = ref(null)
 
+function isNumber(x) {
+  return typeof x === 'number' && !Number.isNaN(x)
+}
+
+function sourceTitle(s) {
+  if (!s) return 'Document'
+  if (typeof s === 'string') return s
+  return s.title || 'Document'
+}
+
 function toggleSources(index) {
   messages.value[index].showSources = !messages.value[index].showSources
+}
+
+function clearChat() {
+  messages.value = []
 }
 
 async function sendQuestion() {
@@ -58,26 +88,33 @@ async function sendQuestion() {
   messages.value.push({ from: 'user', text: question.value })
 
   try {
-    const formData = new FormData()
-    formData.append('question', question.value)
+    const data = await askQA({ question: question.value })
+    const answer = (data.answer || 'No answer received.').trim()
 
-    const res = await axios.post('http://localhost:8000/api/ask', formData)
-    const answer = res.data.answer || 'No answer received.'
-    const sources = res.data.sources || []
+    // Normalize sources to objects: {title, page, similarity}
+    const raw = Array.isArray(data.sources) ? data.sources : []
+    const normalized = raw.map((s) => {
+      if (typeof s === 'string') return { title: s }
+      // Some backends send {text, similarity} — keep compatibility
+      if (s.text && !s.title) s.title = 'Document'
+      return {
+        title: s.title || s.source_title || 'Document',
+        page: s.page ?? null,
+        similarity: typeof s.similarity === 'number' ? s.similarity : null
+      }
+    })
 
     messages.value.push({
       from: 'ai',
       text: answer,
-      sources: sources,
-      showSources: false // default collapsed
+      sources: normalized,
+      showSources: false
     })
   } catch (err) {
     error.value = 'Failed to get answer. Please try again.'
   } finally {
     loading.value = false
     question.value = ''
-
-    // Scroll chat window to bottom
     await nextTick()
     if (chatWindow.value) {
       chatWindow.value.scrollTop = chatWindow.value.scrollHeight
@@ -88,69 +125,84 @@ async function sendQuestion() {
 
 <style scoped>
 .qa-widget {
-  max-width: 600px;
+  max-width: 760px;
   margin: 1rem auto;
-  border: 1px solid #ccc;
-  border-radius: 8px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
   padding: 1rem;
+  background: var(--panel-bg);
+  color: var(--panel-text);
 }
 .chat-window {
-  height: 300px;
+  height: 360px;
   overflow-y: auto;
-  border: 1px solid #ddd;
-  padding: 0.5rem;
+  border: 1px solid var(--border);
+  padding: .75rem;
   margin-bottom: 1rem;
-  background: #f9f9f9;
+  background: var(--panel-bg);
+  color: var(--panel-text);
+  border-radius: 8px;
 }
-.message {
-  margin-bottom: 1rem;
-}
-.message.user {
-  text-align: right;
-  color: #007bff;
-}
-.message.ai {
+.empty { opacity: .8; font-size: .95rem; }
+.message { margin-bottom: 1rem; display: grid; gap: .25rem; }
+.message .who { font-weight: 600; font-size: .9rem; opacity: .85; }
+.message.user .who { color: #3b82f6; }
+.message.ai .who { color: #16a34a; }
+
+.bubble.answer {
+  white-space: pre-wrap;
   text-align: left;
-  color: #333;
+  padding: .6rem .8rem;
+  border-radius: 8px;
+  background: #ffffff;      /* light bubble */
+  color: #111827;           /* dark text so it's readable */
+  border: 1px solid var(--border);
 }
+@media (prefers-color-scheme: dark) {
+  .bubble.answer {
+    background: #0f131a;    /* dark bubble */
+    color: #e5e7eb;         /* light text */
+  }
+}
+
 .sources {
-  margin-top: 0.5rem;
-  font-size: 0.9rem;
-  background: #eef;
-  padding: 0.5rem;
+  margin-top: .4rem;
+  font-size: .9rem;
+  background: #eef6ff;
+  color: #0b3a6f;
+  padding: .5rem .6rem;
   border-radius: 6px;
+  text-align: left;
+  border: 1px solid #dbeafe;
 }
-.toggle-sources-btn {
+@media (prefers-color-scheme: dark) {
+  .sources {
+    background: #0b1f33;
+    color: #c9e5ff;
+    border-color: #173a5c;
+  }
+}
+.toggle {
   background: none;
   border: none;
-  color: #007bff;
+  color: #2563eb;
   cursor: pointer;
   text-decoration: underline;
   padding: 0;
-  margin-bottom: 0.3rem;
-  font-size: 0.9rem;
+  margin-bottom: .25rem;
+  font-size: .9rem;
 }
-.sources ul {
-  padding-left: 1.2rem;
-  margin: 0;
+.sources ul { margin: 0; padding-left: 1.2rem; }
+
+.ask {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: .5rem;
 }
-.error {
-  color: red;
-  margin-top: 0.5rem;
-}
-form {
-  display: flex;
-  gap: 0.5rem;
-}
-input {
-  flex-grow: 1;
-  padding: 0.5rem;
-}
-button {
-  padding: 0.5rem 1rem;
-}
-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
+.ask input { padding: .6rem .7rem; }
+.ask button { padding: .6rem 1rem; border-radius: 8px; }
+.ask .secondary { background: var(--panel-bg); }
+.loading { text-align: center; opacity: .8; }
+.error { color: #ef4444; margin-top: .5rem; }
 </style>
+

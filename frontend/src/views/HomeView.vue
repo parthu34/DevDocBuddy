@@ -8,7 +8,7 @@
 </template>
 
 <script setup>
-import DocInput from '../components/DocInput.vue'
-import DocResults from '../components/DocResults.vue'
-import QAWidget from '../components/QAWidget.vue'
+import DocInput from '@/components/DocInput.vue'
+import DocResults from '@/components/DocResults.vue'
+import QAWidget from '@/components/QAWidget.vue'
 </script>
