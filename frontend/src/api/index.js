@@ -2,7 +2,7 @@ import axios from 'axios'
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE || '',
-  timeout: 30000,
+  timeout: 120000, // 120s to accommodate big PDFs on CPU
 })
 
 export async function summarize({ query, index = true, mode = 'replace', title = 'Manual Text' }) {
