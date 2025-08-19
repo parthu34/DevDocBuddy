@@ -1,0 +1,90 @@
+:root {
+  /* Light theme (default) */
+  --bg: #ffffff;
+  --text: #111827;
+  --muted: #6b7280;
+  --panel-bg: #f8fafc;
+  --panel-text: #111827;
+  --border: #e5e7eb;
+  --primary: #42b983;
+  --primary-hover: #3aa777;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0b0f14;
+    --text: #e5e7eb;
+    --muted: #9ca3af;
+    --panel-bg: #121821;
+    --panel-text: #e5e7eb;
+    --border: #263241;
+    --primary: #66d9a0;
+    --primary-hover: #57c790;
+  }
+}
+
+* { box-sizing: border-box; }
+
+html, body, #app { height: 100%; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  font-weight: 500;
+  color: var(--primary);
+  text-decoration: none;
+}
+a:hover { color: var(--primary-hover); }
+
+h1 { font-size: 2.4rem; line-height: 1.15; margin: 0 0 0.75rem; }
+h2 { margin: 1.25rem 0 0.5rem; }
+h3 { margin: 0.75rem 0; }
+
+#app {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: left; /* reading-oriented default */
+}
+
+button {
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  padding: 0.6em 1.0em;
+  font-size: 1rem;
+  font-weight: 600;
+  font-family: inherit;
+  background: var(--panel-bg);
+  color: var(--panel-text);
+  cursor: pointer;
+  transition: background .15s ease, border-color .15s ease, opacity .15s ease;
+}
+button:hover { border-color: var(--primary); }
+button:disabled { opacity: .6; cursor: not-allowed; }
+
+input, textarea, select {
+  width: 100%;
+  padding: .6rem .7rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+  color: #111827;
+}
+@media (prefers-color-scheme: dark) {
+  input, textarea, select {
+    background: #0f131a;
+    color: #e5e7eb;
+    border-color: var(--border);
+  }
+}
+
+.card { padding: 1rem; border: 1px solid var(--border); border-radius: 12px; background: var(--panel-bg); }
+
+footer { text-align: center; margin-top: 3rem; color: var(--muted); font-size: .9rem; }
