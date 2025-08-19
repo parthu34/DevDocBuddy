@@ -7,13 +7,15 @@ services:
     autoDeploy: true
     buildCommand: |
       python -m pip install --upgrade pip setuptools wheel
-      # Force wheels for Rust-backed deps to avoid maturin/cargo
-      pip install --only-binary=:all: pydantic-core==2.18.3 tokenizers==0.15.2 safetensors==0.4.3
-      # If faiss ever tries to build from source, uncomment next line:
+      # Force wheels for Rust-backed deps (no maturin/cargo)
+      pip install --only-binary=:all: tokenizers==0.15.2 safetensors==0.4.3
+      # If faiss ever tries to build from source, uncomment:
       # pip install --only-binary=:all: faiss-cpu==1.8.0.post5
       pip install --no-cache-dir -r requirements.txt
     startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
     envVars:
+      - key: PYTHON_VERSION
+        value: 3.10.13
       - key: HF_SUMMARIZER
         value: sshleifer/distilbart-cnn-12-6
       - key: EMBEDDING_MODEL
