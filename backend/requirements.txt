@@ -7,7 +7,7 @@ markdown==3.8.1
 httpx==0.24.1
 requests==2.32.4
 transformers==4.43.1
-torch==2.3.0
+torch==2.5.1
 faiss-cpu==1.7.4
 sentence-transformers==2.2.2
 huggingface-hub==0.23.2
