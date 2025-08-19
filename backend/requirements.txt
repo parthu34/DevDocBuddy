@@ -10,7 +10,7 @@ transformers==4.45.1
 torch==2.5.1
 faiss-cpu==1.7.4
 sentence-transformers==2.2.2
-huggingface-hub>=0.23,<1.0
+huggingface-hub==0.16.4
 langchain==0.0.325
 numpy==1.26.4
 beautifulsoup4==4.12.2
