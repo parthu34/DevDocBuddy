@@ -1,90 +1,119 @@
-from sentence_transformers import SentenceTransformer
-import faiss
-import numpy as np
+# backend/embeddings_store.py
 import os
 import pickle
-from typing import List, Dict, Any, Optional, Tuple
+import faiss
+from sentence_transformers import SentenceTransformer
 
 
 class EmbeddingsStore:
     """
-    Cosine-similarity retrieval using FAISS IndexFlatIP
-    (we L2-normalize vectors so inner-product == cosine similarity).
-
-    Now stores metadata per chunk (e.g., page number, source title).
+    Cosine-similarity retrieval using FAISS IndexFlatIP.
+    - Vectors are L2-normalized (SentenceTransformers normalize_embeddings=True),
+      so inner product == cosine similarity.
+    - Persists index, texts, and (new) metas under a writable dir.
+      Defaults to /data/embeddings for HF Spaces.
     """
-    def __init__(self, model_name="all-MiniLM-L6-v2", persist_dir="data"):
+
+    def __init__(self, model_name: str = "all-MiniLM-L6-v2", persist_dir: str | None = None):
         self.model = SentenceTransformer(model_name)
         self.index = None
-        self.texts: List[str] = []
-        self.metas: List[Dict[str, Any]] = []
-        self.dimension = self.model.get_sentence_embedding_dimension()
-        self.persist_dir = persist_dir
+        self.texts: list[str] = []
+        self.metas: list[dict | None] = []  # aligned with self.texts
+
+        # Use /data on HF Spaces; fallback to env var or default local if not set.
+        self.persist_dir = persist_dir or os.getenv("EMBED_PERSIST_DIR", "/data/embeddings")
         os.makedirs(self.persist_dir, exist_ok=True)
+
+        self.dimension = self.model.get_sentence_embedding_dimension()
         self._load_if_exists()
 
-    def _encode(self, texts: List[str]) -> np.ndarray:
+    # -------- encoding --------
+    def _encode(self, texts: list[str]):
         embs = self.model.encode(
             texts,
             convert_to_numpy=True,
             show_progress_bar=False,
-            normalize_embeddings=True
+            normalize_embeddings=True,  # unit vectors
         )
-        # normalize_embeddings=True already L2-normalizes to unit vectors (sbert>=2.2).
         return embs.astype("float32")
 
-    # ----------------------
-    # Build / Add
-    # ----------------------
-    def build_index(self, texts: List[str], metas: Optional[List[Dict[str, Any]]] = None):
+    # -------- build / add --------
+    def build_index(self, texts: list[str], metas: list[dict | None] | None = None):
+        """
+        (Re)build the index from scratch.
+        Accepts optional metadata list (same length as texts). If None/short/long, we pad/trim.
+        Backward-compatible: older callers can pass only `texts`.
+        """
+        self.index = None
+        self.texts = []
+        self.metas = []
+
         if not texts:
-            self.index = None
-            self.texts = []
-            self.metas = []
+            self._persist()
             return
-        if metas is None:
-            metas = [{} for _ in texts]
-        if len(metas) != len(texts):
-            raise ValueError("metas length must match texts length")
+
         embeddings = self._encode(texts)
-        self.index = faiss.IndexFlatIP(self.dimension)  # cosine when vectors are unit-normalized
+        self.index = faiss.IndexFlatIP(self.dimension)  # cosine on unit vectors
         self.index.add(embeddings)
         self.texts = list(texts)
-        self.metas = list(metas)
+
+        if metas is None:
+            self.metas = [None] * len(self.texts)
+        else:
+            m = list(metas)
+            if len(m) < len(self.texts):
+                m += [None] * (len(self.texts) - len(m))
+            elif len(m) > len(self.texts):
+                m = m[: len(self.texts)]
+            self.metas = m
+
         self._persist()
 
-    def add_texts(self, new_texts: List[str], new_metas: Optional[List[Dict[str, Any]]] = None):
+    def add_texts(self, new_texts: list[str], new_metas: list[dict | None] | None = None):
+        """
+        Append new items to an existing index.
+        Backward-compatible: older callers can pass only `new_texts`.
+        """
         if not new_texts:
             return
-        if new_metas is None:
-            new_metas = [{} for _ in new_texts]
-        if len(new_metas) != len(new_texts):
-            raise ValueError("new_metas length must match new_texts length")
-        embeddings = self._encode(new_texts)
+
+        embs = self._encode(new_texts)
         if self.index is None:
             self.index = faiss.IndexFlatIP(self.dimension)
             self.texts = []
             self.metas = []
-        self.index.add(embeddings)
-        self.texts.extend(new_texts)
-        self.metas.extend(new_metas)
+
+        self.index.add(embs)
+        self.texts.extend(list(new_texts))
+
+        if new_metas is None:
+            self.metas.extend([None] * len(new_texts))
+        else:
+            nm = list(new_metas)
+            if len(nm) < len(new_texts):
+                nm += [None] * (len(new_texts) - len(nm))
+            elif len(nm) > len(new_texts):
+                nm = nm[: len(new_texts)]
+            self.metas.extend(nm)
+
         self._persist()
 
     def reset(self):
+        """Clear index and remove persisted files."""
         self.index = None
         self.texts = []
         self.metas = []
-        for fname in ["index.faiss", "texts.pkl", "metas.pkl"]:
+        for fn in ("index.faiss", "texts.pkl", "metas.pkl"):
             try:
-                os.remove(os.path.join(self.persist_dir, fname))
+                os.remove(os.path.join(self.persist_dir, fn))
             except FileNotFoundError:
                 pass
 
-    # ----------------------
-    # Search
-    # ----------------------
+    # -------- search --------
     def search(self, query: str, top_k: int = 5):
-        """Legacy: returns (results, scores)."""
+        """
+        Return (texts, scores) for backward compatibility with older code.
+        """
         if self.index is None:
             return [], []
         q = self._encode([query])
@@ -93,29 +122,30 @@ class EmbeddingsStore:
         for score, idx in zip(sims[0], idxs[0]):
             if 0 <= idx < len(self.texts):
                 results.append(self.texts[idx])
-                scores.append(float(score))
+                scores.append(float(score))  # cosine in [-1,1]
         return results, scores
 
-    def search_with_meta(self, query: str, top_k: int = 8) -> List[Dict[str, Any]]:
-        """Preferred: returns list of {index, text, meta, similarity}."""
-        out: List[Dict[str, Any]] = []
+    def search_with_meta(self, query: str, top_k: int = 5):
+        """
+        Return list of dicts: {"text": str, "meta": dict|None, "similarity": float}
+        """
         if self.index is None:
-            return out
+            return []
         q = self._encode([query])
         sims, idxs = self.index.search(q, top_k)
+        out = []
         for score, idx in zip(sims[0], idxs[0]):
             if 0 <= idx < len(self.texts):
-                out.append({
-                    "index": int(idx),
-                    "text": self.texts[idx],
-                    "meta": self.metas[idx] if self.metas and idx < len(self.metas) else {},
-                    "similarity": float(score),
-                })
+                out.append(
+                    {
+                        "text": self.texts[idx],
+                        "meta": self.metas[idx] if self.metas else None,
+                        "similarity": float(score),
+                    }
+                )
         return out
 
-    # ----------------------
-    # Persistence
-    # ----------------------
+    # -------- persistence --------
     def _persist(self):
         idx_path = os.path.join(self.persist_dir, "index.faiss")
         txt_path = os.path.join(self.persist_dir, "texts.pkl")
@@ -143,7 +173,7 @@ class EmbeddingsStore:
                     with open(meta_path, "rb") as f:
                         self.metas = pickle.load(f)
                 else:
-                    self.metas = [{} for _ in self.texts]
+                    self.metas = [None] * len(self.texts)
         except Exception:
             self.index = None
             self.texts = []
