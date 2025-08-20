@@ -61,6 +61,7 @@
 import { ref, nextTick, onMounted } from 'vue'
 import { askQA } from '@/api'
 import { useDocStore } from '@/stores/docStore'
+import { track } from '@/analytics'
 
 const store = useDocStore()
 const question = ref('')
@@ -70,7 +71,6 @@ const error = ref(null)
 const chatWindow = ref(null)
 
 onMounted(() => {
-  // On first load, learn whether an index already exists (e.g., after refresh)
   store.initIndexStatus()
 })
 
@@ -99,6 +99,7 @@ async function sendQuestion() {
   loading.value = true
 
   messages.value.push({ from: 'user', text: question.value })
+  track('qa_asked', { len: (question.value || '').length })
 
   try {
     const data = await askQA({ question: question.value })
@@ -115,8 +116,8 @@ async function sendQuestion() {
     })
     messages.value.push({ from: 'ai', text: answer, sources: normalized, showSources: false })
   } catch (err) {
-    // Show the exact backend message (400/413/429/503)
     error.value = err?.message || 'Failed to get answer.'
+    track('qa_failed', { message: error.value })
   } finally {
     loading.value = false
     question.value = ''

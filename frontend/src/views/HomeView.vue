@@ -4,6 +4,7 @@
     <DocInput />
     <DocResults />
     <QAWidget />
+    <EmailCapture />
   </section>
 </template>
 
@@ -13,6 +14,7 @@ import { useDocStore } from '@/stores/docStore'
 import DocInput from '../components/DocInput.vue'
 import DocResults from '../components/DocResults.vue'
 import QAWidget from '../components/QAWidget.vue'
+import EmailCapture from '../components/EmailCapture.vue'
 
 const store = useDocStore()
 onMounted(() => store.initIndexStatus())
