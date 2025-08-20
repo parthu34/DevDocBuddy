@@ -4,6 +4,7 @@
       <nav>
         <router-link to="/" class="nav-link" exact-active-class="active">Home</router-link>
         <router-link to="/docs" class="nav-link" exact-active-class="active">Docs</router-link>
+        <BackendStatus />
       </nav>
     </header>
 
