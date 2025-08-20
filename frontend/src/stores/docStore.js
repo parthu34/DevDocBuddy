@@ -1,4 +1,3 @@
-// src/stores/docStore.js
 import { defineStore } from 'pinia'
 import { summarize, uploadFile, uploadFromURL, addDocument, resetEmbeddings, getIndexStatus } from '@/api'
 import { track } from '@/analytics'
@@ -36,10 +35,9 @@ export const useDocStore = defineStore('docStore', {
         this.results = data.summary || null
         this.lastFilename = data.title || 'Manual Text'
         this.hasIndex = true
-        track('summary_uploaded', { kind: 'text', chars: (this.query || '').length })
+        track('summarize_text', { length: (this.query || '').length })
       } catch (e) {
         this.error = e?.message || 'Failed to summarize'
-        track('upload_failed', { kind: 'text', message: this.error })
       } finally {
         this.loading = false
       }
@@ -53,10 +51,9 @@ export const useDocStore = defineStore('docStore', {
         const data = await uploadFile(file)
         this.results = data.summary || null
         this.hasIndex = true
-        track('summary_uploaded', { kind: 'file', size: file?.size || 0, name: this.lastFilename })
+        track('upload_file', { name: file?.name || 'unknown', size: file?.size || 0 })
       } catch (e) {
         this.error = e?.message || 'File upload failed'
-        track('upload_failed', { kind: 'file', message: this.error })
       } finally {
         this.loading = false
       }
@@ -70,10 +67,9 @@ export const useDocStore = defineStore('docStore', {
         const data = await addDocument(file)
         this.results = data.summary || null
         this.hasIndex = true
-        track('summary_uploaded', { kind: 'add-doc', size: file?.size || 0, name: this.lastFilename })
+        track('add_doc', { name: file?.name || 'unknown', size: file?.size || 0 })
       } catch (e) {
         this.error = e?.message || 'Add-doc failed'
-        track('upload_failed', { kind: 'add-doc', message: this.error })
       } finally {
         this.loading = false
       }
@@ -87,10 +83,9 @@ export const useDocStore = defineStore('docStore', {
         const data = await uploadFromURL(url)
         this.results = data.summary || null
         this.hasIndex = true
-        track('url_uploaded', { url })
+        track('upload_url', { url })
       } catch (e) {
         this.error = e?.message || 'URL upload failed'
-        track('upload_failed', { kind: 'url', message: this.error })
       } finally {
         this.loading = false
       }
@@ -109,7 +104,6 @@ export const useDocStore = defineStore('docStore', {
         track('reset_index')
       } catch (e) {
         this.error = e?.message || 'Reset failed'
-        track('upload_failed', { kind: 'reset', message: this.error })
       } finally {
         this.loading = false
       }

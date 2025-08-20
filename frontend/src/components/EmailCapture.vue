@@ -27,7 +27,7 @@ import { computed } from 'vue'
 // Replace "YOUR_BUTTONDOWN_USERNAME" with your actual Buttondown username.
 // Create one here: https://buttondown.email/
 const endpoint = computed(() =>
-  'https://buttondown.email/api/emails/embed-subscribe/YOUR_BUTTONDOWN_USERNAME'
+  'https://buttondown.email/api/emails/embed-subscribe/DevDocBuddy'
 )
 </script>
 

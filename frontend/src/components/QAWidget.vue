@@ -74,20 +74,10 @@ onMounted(() => {
   store.initIndexStatus()
 })
 
-function isNumber(x) {
-  return typeof x === 'number' && !Number.isNaN(x)
-}
-function sourceTitle(s) {
-  if (!s) return 'Document'
-  if (typeof s === 'string') return s
-  return s.title || 'Document'
-}
-function toggleSources(index) {
-  messages.value[index].showSources = !messages.value[index].showSources
-}
-function clearChat() {
-  messages.value = []
-}
+function isNumber(x) { return typeof x === 'number' && !Number.isNaN(x) }
+function sourceTitle(s) { if (!s) return 'Document'; if (typeof s === 'string') return s; return s.title || 'Document' }
+function toggleSources(index) { messages.value[index].showSources = !messages.value[index].showSources }
+function clearChat() { messages.value = [] }
 
 async function sendQuestion() {
   if (!store.hasIndex) {
@@ -99,7 +89,6 @@ async function sendQuestion() {
   loading.value = true
 
   messages.value.push({ from: 'user', text: question.value })
-  track('qa_asked', { len: (question.value || '').length })
 
   try {
     const data = await askQA({ question: question.value })
@@ -115,9 +104,9 @@ async function sendQuestion() {
       }
     })
     messages.value.push({ from: 'ai', text: answer, sources: normalized, showSources: false })
+    track('ask_question', { length: question.value.length })
   } catch (err) {
     error.value = err?.message || 'Failed to get answer.'
-    track('qa_failed', { message: error.value })
   } finally {
     loading.value = false
     question.value = ''
@@ -128,6 +117,7 @@ async function sendQuestion() {
 </script>
 
 <style scoped>
+/* (unchanged styles) */
 .qa-widget { max-width: 760px; margin: 1rem auto; border: 1px solid var(--border); border-radius: 12px; padding: 1rem; background: var(--panel-bg); color: var(--panel-text); }
 .chat-window { height: 360px; overflow-y: auto; border: 1px solid var(--border); padding: .75rem; margin-bottom: 1rem; background: var(--panel-bg); color: var(--panel-text); border-radius: 8px; }
 .empty { opacity: .9; font-size: .95rem; }
