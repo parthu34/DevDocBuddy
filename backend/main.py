@@ -291,6 +291,11 @@ def reset_embeddings():
     embed_store.reset()
     return JSONResponse(content={"message": "Embeddings store reset successfully."})
 
+@app.get("/api/reset")
+def reset_embeddings_get():
+    return reset_embeddings()
+
+
 @app.post("/api/ask")
 def ask_question(question: str = Form(...), top_k: int = Form(8)):
     if not embed_store.index or not embed_store.texts:
