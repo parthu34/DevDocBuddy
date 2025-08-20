@@ -1,7 +1,6 @@
 export function track(name, props = {}) {
-  try {
-    if (typeof window !== 'undefined' && typeof window.plausible === 'function') {
-      window.plausible(name, { props });
-    }
-  } catch {}
+  // graceful no-op if plausible is blocked or not yet available
+  if (typeof window !== 'undefined' && typeof window.plausible === 'function') {
+    window.plausible(name, { props })
+  }
 }
