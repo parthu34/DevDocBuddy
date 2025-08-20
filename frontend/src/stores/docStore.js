@@ -1,28 +1,39 @@
 import { defineStore } from 'pinia'
-import { summarize, uploadFile, uploadFromURL, addDocument, resetEmbeddings } from '@/api'
+import { summarize, uploadFile, uploadFromURL, addDocument, resetEmbeddings, getIndexStatus } from '@/api'
 
 export const useDocStore = defineStore('docStore', {
   state: () => ({
-    query: '',         // pasted text
-    url: '',           // GitHub URL (moved from local component state)
+    query: '',
+    url: '',
     results: null,
     loading: false,
     error: null,
     lastFilename: null,
+    hasIndex: false,   // NEW: gate for Q&A
   }),
   actions: {
+    async initIndexStatus() {
+      try {
+        const st = await getIndexStatus()
+        this.hasIndex = !!st?.ready
+      } catch {
+        this.hasIndex = false
+      }
+    },
+
     async fetchSummary() {
       this.loading = true
       this.error = null
       try {
         const data = await summarize({
           query: this.query,
-          index: true,            // Summarize & Index (replace)
+          index: true,
           mode: 'replace',
           title: 'Manual Text'
         })
         this.results = data.summary || null
         this.lastFilename = data.title || 'Manual Text'
+        this.hasIndex = true
       } catch (e) {
         this.error = e?.message || 'Failed to summarize'
       } finally {
@@ -37,6 +48,7 @@ export const useDocStore = defineStore('docStore', {
       try {
         const data = await uploadFile(file)
         this.results = data.summary || null
+        this.hasIndex = true
       } catch (e) {
         this.error = e?.message || 'File upload failed'
       } finally {
@@ -51,6 +63,7 @@ export const useDocStore = defineStore('docStore', {
       try {
         const data = await addDocument(file)
         this.results = data.summary || null
+        this.hasIndex = true
       } catch (e) {
         this.error = e?.message || 'Add-doc failed'
       } finally {
@@ -65,6 +78,7 @@ export const useDocStore = defineStore('docStore', {
       try {
         const data = await uploadFromURL(url)
         this.results = data.summary || null
+        this.hasIndex = true
       } catch (e) {
         this.error = e?.message || 'URL upload failed'
       } finally {
@@ -77,11 +91,11 @@ export const useDocStore = defineStore('docStore', {
       this.error = null
       try {
         await resetEmbeddings()
-        // Also clear user inputs & UI state
         this.results = null
         this.lastFilename = null
-        this.query = ''    // clear pasted text
-        this.url = ''      // clear GitHub URL input
+        this.query = ''
+        this.url = ''
+        this.hasIndex = false
       } catch (e) {
         this.error = e?.message || 'Reset failed'
       } finally {
