@@ -3,7 +3,15 @@
   "outputDirectory": "dist",
   "framework": "vite",
   "rewrites": [
-    { "source": "/plausible/js/script.js", "destination": "https://plausible.io/js/script.js" },
-    { "source": "/plausible/api/event", "destination": "https://plausible.io/api/event" }
-]
+    { "source": "/js/script.js", "destination": "https://plausible.io/js/script.js" },
+    { "source": "/api/event",   "destination": "https://plausible.io/api/event" }
+  ],
+  "headers": [
+    {
+      "source": "/js/script.js",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    }
+  ]
 }
