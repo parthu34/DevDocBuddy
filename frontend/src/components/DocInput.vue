@@ -13,6 +13,12 @@
     </div>
     <small class="hint">This replaces the current index with the text above.</small>
 
+    <!-- Load sample doc (frictionless demo) -->
+    <div class="row">
+      <button @click="loadSample" :disabled="store.loading">Load Sample Doc</button>
+      <small class="hint">Instant demo without uploading anything.</small>
+    </div>
+
     <!-- Upload new document (rebuild index) -->
     <div class="row">
       <input type="file" @change="onUpload" />
@@ -43,7 +49,21 @@
 
 <script setup>
 import { useDocStore } from '@/stores/docStore'
+import { track } from '@/analytics'
 const store = useDocStore()
+
+const SAMPLE = `# DevDocBuddy Sample
+DevDocBuddy summarizes docs and answers questions with sources.
+- Upload PDF/Markdown/GitHub URL
+- Ask questions in plain English
+- See the exact chunks used as citations
+`
+
+async function loadSample() {
+  store.query = SAMPLE
+  track('sample_loaded')
+  await store.fetchSummary()
+}
 
 async function onUpload(e) {
   const file = e.target.files?.[0]

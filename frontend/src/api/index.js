@@ -1,5 +1,6 @@
 // src/api/index.js
 import axios from 'axios'
+import { track } from '@/analytics'
 
 const baseURL = import.meta.env.VITE_API_BASE || (import.meta.env.DEV ? '' : undefined)
 if (!baseURL && !import.meta.env.DEV) {
@@ -8,8 +9,21 @@ if (!baseURL && !import.meta.env.DEV) {
 
 const api = axios.create({
   baseURL,
-  timeout: 120000,
+  timeout: 120000, // 120s for bigger PDFs on CPU
 })
+
+// Optional: centralized error tracking
+api.interceptors.response.use(
+  (res) => res,
+  (err) => {
+    try {
+      const code = err?.response?.status || 0
+      const url = err?.config?.url || ''
+      track('http_error', { code, url })
+    } catch {}
+    return Promise.reject(err)
+  }
+)
 
 // Helpful error extractor
 function asMessage(err) {
