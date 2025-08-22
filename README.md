@@ -2,7 +2,6 @@
 
 Turn dense developer docs into answers. Upload a PDF/Markdown or paste a GitHub URL, get a plain-English summary, then **ask questions with sources**.
 
-- **Live app:** https://dev-doc-buddy.vercel.app  
 - **Backend (API):** Hugging Face Space (containerized FastAPI)  
 - **Self-host bundle:** see Releases for zip
 
