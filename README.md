@@ -84,7 +84,7 @@ npm run dev
 - Import repo → framework Vite (auto).
 - Env Vars → VITE_API_BASE = your Space base URL, e.g.:
 
-**🧪How to Use (Flow)**
+### 🧪How to Use (Flow)
 1. Upload a PDF/Markdown or paste a GitHub URL, then click Summarize & Index.
 - The summary renders in “Results”.
 - The index is built for Q&A.
@@ -99,7 +99,7 @@ npm run dev
 Index status: the app prevents Q&A until an index exists.
 The frontend calls /api/index-status and gates the “Ask” input.
 
-**🔌API (for reference)**
+###🔌API (for reference)
 All routes are under the backend base URL.
 - GET /healthz – simple health check
 - POST /api/summarize – body { query, index, mode, title }
@@ -111,7 +111,7 @@ All routes are under the backend base URL.
 - POST /api/reset – clears FAISS + cached texts
 - GET /api/index-status – { ready: boolean }
 
-**🧯Troubleshooting**
+### 🧯Troubleshooting
 
 **“Request failed with status code 404” (frontend):**
 Check VITE_API_BASE points to your backend root (not /api).
@@ -129,15 +129,15 @@ You must Summarize & Index first. The app checks /api/index-status.
 **Windows zip too large:**
 Remove transient folders before zipping: backend/data/, __pycache__/, node_modules/, dist/.
 
-**🔐License & Terms**
+### 🔐License & Terms
 - See LICENSE (project license).
 - See EULA-SELFHOST.txt (end-user terms for the self-hosted bundle).
 - See NOTICE.md for acknowledgements.
 
-**🙌 Contributing / Issues**
+### 🙌 Contributing / Issues
 
 Issues and PRs are welcome for bug fixes and small improvements.
 For feature requests, please open an issue first.
 
-**📫 Contact**
+### 📫 Contact
 For support or bundle questions: open a GitHub issue or contact via your listing page.
