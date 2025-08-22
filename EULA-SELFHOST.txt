@@ -1,0 +1,27 @@
+End User License Agreement (EULA) — DevDocBuddy Self-Host Bundle
+
+By purchasing, downloading, or using this bundle, you agree to the following terms:
+
+1. License Grant
+   - You are granted a non-exclusive, non-transferable license to install and use DevDocBuddy on your own infrastructure for personal or commercial purposes.
+
+2. Restrictions
+   - You may not redistribute, resell, or sublicense this bundle without explicit written permission from the author (Parth Darji).
+   - You may not share your purchased copy publicly or with third parties.
+   - Each purchase is valid for one individual or one organization (single use).
+
+3. Ownership
+   - DevDocBuddy remains the intellectual property of its author.
+   - This license grants usage rights, not ownership of the software.
+
+4. Disclaimer
+   - The software is provided “as is” without warranties of any kind.
+   - The author is not responsible for damages, data loss, or misuse.
+
+5. Termination
+   - This license is effective until terminated.
+   - Any violation of these terms may result in license revocation without refund.
+
+By using this bundle, you acknowledge that you have read, understood, and agreed to these terms.
+
+© 2025 Parth Darji. All rights reserved.
